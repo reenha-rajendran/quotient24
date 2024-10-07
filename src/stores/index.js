@@ -51,9 +51,9 @@ export default createStore({
     filtersApplied(state) {
       return (
         state.filters.q ||
-        state.filters.domains ||
+        state.filters.domains.length > 0 ||
         state.filters.region ||
-        state.filters.dateRange.from ||
+        (state.filters.dateRange.from && state.filters.dateRange.to) ||
         state.filters.sources.length > 0 ||
         state.filters.searchIn.length > 0 ||
         state.filters.excludeDomains
@@ -62,10 +62,10 @@ export default createStore({
     activeFilterCount(state) {
       let count = 0;
       if (state.filters.q) count++;
-      if (state.filters.domains) count++;
+      if (state.filters.domains.length > 0) count++;
       if (state.filters.excludeDomains) count++;
       if (state.filters.region) count++;
-      if (state.filters.dateRange.from) count++;
+      if (state.filters.dateRange.from && state.filters.dateRange.to) count++;
       if (state.filters.sources.length > 0) count++;
       if (state.filters.searchIn.length > 0) count++;
       return count;
@@ -91,7 +91,11 @@ export default createStore({
       state.sources = sources;
     },
     UPDATE_FILTER(state, { filter, value }) {
-      state.filters[filter] = value;
+      if (filter === "dateRange") {
+        state.filters.dateRange = { ...value };
+      } else {
+        state.filters[filter] = value;
+      }
 
       if (filter === "region" && value !== "") {
         state.filters.sources = [];

@@ -139,7 +139,6 @@ export default {
       showFilters: false,
       showQueryError: false,
       dateError: false,
-      filtersApplied: false,
     };
   },
   computed: {
@@ -171,7 +170,11 @@ export default {
 
     clearLocalFilters() {
       this.clearFilters();
-      this.filtersApplied = false;
+
+      // Ensure that UI is updated correctly
+      this.$nextTick(() => {
+        this.$forceUpdate();
+      });
     },
 
     applyFilters() {
@@ -195,23 +198,19 @@ export default {
       } else {
         this.showQueryError = false;
         this.updateFilter({ filter: "q", value: this.filters.q });
-        this.filtersApplied = true;
       }
     },
 
     updateDomains() {
       this.updateFilter({ filter: "domains", value: this.filters.domains });
-      this.filtersApplied = true;
     },
 
     updateRegion(region) {
       this.updateFilter({ filter: "region", value: region });
-      this.filtersApplied = true;
     },
 
     updateDate(dateRange) {
-      this.updateFilter({ filter: "dateRange", value: dateRange });
-      this.filtersApplied = true;
+      this.updateFilter({ filter: "dateRange", value: { ...dateRange } });
     },
 
     updateSource(source) {
@@ -219,29 +218,15 @@ export default {
       if (source) {
         this.updateFilter({ filter: "region", value: "" });
       }
-      this.filtersApplied = true;
     },
 
     updateSort(sort) {
       this.updateFilter({ filter: "sortBy", value: sort });
-      this.filtersApplied = true;
     },
 
     updateSearchIn(searchIn) {
       this.updateFilter({ filter: "searchIn", value: searchIn });
-      this.filtersApplied = true;
     },
-  },
-
-  mounted() {
-    // Add click listener to handle clicks outside of the filter container
-    document.addEventListener("click", this.handleClickOutside);
-    this.$store.dispatch("fetchSources");
-  },
-
-  beforeUnmount() {
-    // Remove click listener when component is destroyed
-    document.removeEventListener("click", this.handleClickOutside);
   },
 };
 </script>
@@ -349,17 +334,17 @@ export default {
 @media (max-width: 1333px) {
   .filters-container {
     display: flex;
-    flex-wrap: wrap; /* Allow wrapping if filters don't fit in one row */
-    justify-content: flex-start; /* Align filters to the left */
+    flex-wrap: wrap;
+    justify-content: flex-start;
     align-items: center;
-    gap: 10px; /* Smaller gap for neater alignment */
+    gap: 10px;
     position: fixed;
-    top: 0;
+    top: 100px;
     left: 0;
     right: 0;
     z-index: 1000;
     background-color: white;
-    padding: 10px 15px; /* Add padding for inner spacing */
+    padding: 10px 15px;
     max-height: 70vh;
     overflow-y: auto;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
@@ -369,10 +354,10 @@ export default {
 
   .filter-row {
     display: flex;
-    flex-direction: row; /* Align filters in one row */
+    flex-direction: row;
     align-items: center;
-    gap: 15px; /* Evenly spaced filters */
-    width: 100%; /* Ensure the row takes full width */
+    gap: 15px;
+    width: 100%;
   }
 
   .filters-button {

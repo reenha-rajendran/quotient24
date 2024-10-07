@@ -158,6 +158,7 @@
     <div class="infinite-scroll-trigger" ref="infiniteScrollTrigger"></div>
   </div>
 </template>
+
 <script>
 import axios from "axios";
 import throttle from "lodash/throttle";
@@ -231,13 +232,14 @@ export default {
           `https://newsapi.org/v2/top-headlines?country=us&apiKey=${process.env.VUE_APP_NEWS_API_KEY}`
         );
         this.breakingNews = response.data.articles;
-        this.visibleBreakingNews = this.breakingNews.slice(0, 5);
+        this.visibleBreakingNews = this.breakingNews.slice(0, 100);
       } catch (error) {
         console.error("Error fetching breaking news:", error);
       } finally {
         this.isFetching = false;
       }
     },
+
     async fetchTopStories() {
       this.isFetching = true;
       try {
@@ -293,16 +295,18 @@ export default {
         this.fetchInternationalNews();
       }
     },
+
     startBreakingNewsTicker() {
-      setInterval(() => {
-        this.breakingNewsIndex =
-          (this.breakingNewsIndex + 1) % this.breakingNews.length;
-        this.visibleBreakingNews = this.breakingNews.slice(
-          this.breakingNewsIndex,
-          this.breakingNewsIndex + 5
-        );
-      }, 5000);
+      if (this.breakingNews.length > 0) {
+        // Select the ticker element
+        const ticker = document.querySelector(".ticker");
+
+        // Clone the ticker content for seamless looping
+        const tickerClone = ticker.cloneNode(true);
+        ticker.appendChild(tickerClone);
+      }
     },
+
     updateTime() {
       const options = {
         weekday: "long",
@@ -367,7 +371,6 @@ export default {
   transform: translate(-50%, -50%);
   font-size: 1.5rem;
   color: black;
-  font-family: "Times New Roman", serif;
 }
 
 /* Date and Time */
@@ -601,7 +604,9 @@ nav.open ul {
 
 .ticker {
   display: flex;
-  animation: scroll 40s linear infinite;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: scroll 100s linear infinite;
 }
 
 .ticker-item {
@@ -609,12 +614,13 @@ nav.open ul {
   padding: 0 30px;
   font-size: 1rem;
   cursor: pointer;
+  margin: 0;
 }
 
 /* Scroll animation */
 @keyframes scroll {
   0% {
-    transform: translateX(100%);
+    transform: translateX(0);
   }
   100% {
     transform: translateX(-100%);
@@ -908,11 +914,11 @@ nav.open ul {
   }
 
   .hero-text h2 {
-    font-size: 1.5rem;
+    font-size: 1rem;
   }
 
   .hero-text p {
-    font-size: 1rem;
+    font-size: 0.5rem;
   }
 }
 
