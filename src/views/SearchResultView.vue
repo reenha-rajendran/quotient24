@@ -110,8 +110,12 @@ export default {
       return new Date(date).toLocaleDateString("en-US", options);
     },
     handleScroll() {
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
       const bottomOfWindow =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight;
+        window.innerHeight + scrollTop >=
+        document.documentElement.offsetHeight - 10; // Adds a small buffer for smoother experience
+
       if (bottomOfWindow && !this.isLoading && this.hasMorePages) {
         this.$store.commit("SET_PAGE", this.currentPage + 1);
         this.fetchArticles(true);

@@ -684,6 +684,7 @@ nav.open ul {
 
 .article-source {
   font-weight: bold;
+  color: #007acc;
 }
 
 .article-date {

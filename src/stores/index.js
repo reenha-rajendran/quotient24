@@ -2,6 +2,7 @@ import { createStore } from "vuex";
 import createPersistedState from "vuex-persistedstate";
 import axios from "axios";
 
+// Handle API errors
 function handleApiError(error) {
   if (error.response) {
     return `Error ${error.response.status}: ${error.response.data.message}`;
@@ -31,6 +32,7 @@ export default createStore({
     totalResults: 0,
     error: null,
     sources: [],
+    isFetching: false,
   },
   getters: {
     getArticles(state) {
@@ -75,6 +77,9 @@ export default createStore({
     SET_ARTICLES(state, articles) {
       state.articles = articles;
     },
+    APPEND_ARTICLES(state, articles) {
+      state.articles = [...state.articles, ...articles];
+    },
     SET_TOTAL_RESULTS(state, totalResults) {
       state.totalResults = totalResults;
     },
@@ -89,6 +94,9 @@ export default createStore({
     },
     SET_SOURCES(state, sources) {
       state.sources = sources;
+    },
+    SET_FETCHING(state, status) {
+      state.isFetching = status;
     },
     UPDATE_FILTER(state, { filter, value }) {
       if (filter === "dateRange") {
@@ -119,12 +127,16 @@ export default createStore({
     },
   },
   actions: {
-    async fetchArticles({ state, commit }) {
+    // Fetch articles from API
+    async fetchArticles({ commit, state }, append = false) {
+      commit("SET_FETCHING", true);
+
       const params = {
         pageSize: state.filters.pageSize,
         page: state.filters.page,
       };
 
+      // Apply filters to the API request
       if (state.filters.q) params.q = state.filters.q;
       if (state.filters.domains) params.domains = state.filters.domains;
       if (state.filters.excludeDomains) params.excludeDomains = true;
@@ -153,14 +165,24 @@ export default createStore({
           `https://newsapi.org/v2/${endpoint}?apiKey=${process.env.VUE_APP_NEWS_API_KEY}`,
           { params }
         );
-        commit("SET_ARTICLES", response.data.articles);
-        commit("SET_TOTAL_RESULTS", response.data.totalResults || 0);
+        const newArticles = response.data.articles;
+        const totalResults = response.data.totalResults;
+
+        if (append) {
+          commit("APPEND_ARTICLES", newArticles);
+        } else {
+          commit("SET_ARTICLES", newArticles);
+        }
+        commit("SET_TOTAL_RESULTS", totalResults);
         commit("SET_ERROR", null);
       } catch (error) {
         commit("SET_ERROR", handleApiError(error));
+      } finally {
+        commit("SET_FETCHING", false);
       }
     },
 
+    // Fetch sources for filtering
     async fetchSources({ commit }) {
       try {
         const response = await axios.get(
